@@ -472,7 +472,7 @@ CoreUtilities <- R6Class(
     ## make one variable plots
     OneVariablePlotSort = function(colList=NA, Scores=NA, orderOfFactor=NA, orderOfSignature=NA, standardize=FALSE, logit =FALSE,
                                    plotType="StringBean",customColorDF=NA, yLab="Score", summaryHlines =FALSE, 
-                                   sizeOfDots = 1, legendDisplay=TRUE, logBase=2){
+                                   sizeOfDots = 1, legendDisplay=TRUE, logBase=2, extradimension_colname=NA, extradimension_val=NA){
       
       #if (unique(is.na(customColors))) { customColors = setNames( StatsFinal$Color, StatsFinal$Diagnosis) }
       #function
@@ -516,6 +516,7 @@ CoreUtilities <- R6Class(
           labs( title= x ) +
           ylab( yLab ) +
           geom_hline(yintercept=0, size=0.1) +
+          theme_bw() +
           theme( title = element_text(size=13, face="bold")
                  ,axis.title.x = element_blank()
                  ,axis.title.y=element_text(size=10, face="bold")
@@ -528,7 +529,7 @@ CoreUtilities <- R6Class(
                  ,panel.grid.major.x=element_blank()
                  ,panel.grid.major.y=element_blank()
                  ,panel.grid.minor.x=element_blank()
-                 ,panel.border = element_rect(colour = "lightgrey", fill=NA, size=0.0000000002, linetype = 1)
+                 ,panel.border = element_rect(colour = "gray", fill=NA, size=0.0000000002, linetype = 1)
                  ,panel.spacing = unit(0, "cm")
                  ,strip.switch.pad.grid = unit(0, "cm")
           ) +
@@ -546,9 +547,15 @@ CoreUtilities <- R6Class(
           geom_hline(yintercept = scoreSummary[[2]], linetype="dashed", colour="#8888ff", size=0.4) +
           geom_hline(yintercept = scoreSummary[[4]], linetype="dashed", colour="#8888ff", size=0.4) + 
           geom_hline(yintercept = scoreSummary[[5]], linetype="dashed", colour="#8888ff", size=0.4)
-        }     
+        }
         colnames(segmentDF)[3] <- x ; segmentDF$Diagnosis <- factor(segmentDF$Diagnosis, levels = orderOfFactor, ordered = TRUE);
         segmentDF <- segmentDF %>% arrange(Diagnosis)
+        
+        if(!is.na(extradimension_colname) & !is.na(extradimension_val)) {
+          thirddimension_data <- dplyr::filter_(tidyScores, .dots = paste0(extradimension_colname, "=='", extradimension_val, "'"))
+          plot <- plot +  geom_point(data=thirddimension_data, aes(x=SNONorm, y=Scores), size=sizeOfDots+1, stroke=1, shape=1, color="gold4")
+        }
+        
         return(list(plot, segmentDF[,c(1,3)]) )
       }
       drawDensityPlot <- function(x, tidyScoresPre=NA , orderOfFactor=NA, customColors=NA, yLab =yLab){
