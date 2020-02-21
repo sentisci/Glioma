@@ -465,8 +465,20 @@ CoreUtilities <- R6Class(
     ## calculate cytolytic scores
     cytolyticScore = function(expDF = NA ) {
       cytolyticDF       <- expDF[c("GZMA","GZMB","GZMH","GZMK", "GZMM", "PRF1"),] ; 
-      CytolyticScores   <- apply(cytolyticDF,2, self$calculateGeoMean) %>% data.frame() %>% t()
+      CytolyticScores   <- apply(cytolyticDF,2, mean) %>% data.frame() %>% t()
       rownames(CytolyticScores) <- "CytolyticScore"
+      return(CytolyticScores)
+    },
+    CD4_Th1 = function(expDF = NA ) {
+      cytolyticDF       <- expDF[c("IL1A", "IL1B", "TNF","IL2", "IL15", "IFNG", "CSF2"),] ; 
+      CytolyticScores   <- apply(cytolyticDF,2, mean) %>% data.frame() %>% t()
+      rownames(CytolyticScores) <- "CD4_Th1"
+      return(CytolyticScores)
+    },
+    CD4_Th2 = function(expDF = NA ) {
+      cytolyticDF       <- expDF[c("IL3", "IL4", "IL5","IL6", "IL8", "IL10", "IL13", "IL25", "IL31"),] ; 
+      CytolyticScores   <- apply(cytolyticDF,2, mean) %>% data.frame() %>% t()
+      rownames(CytolyticScores) <- "CD4_Th2"
       return(CytolyticScores)
     },
     ## make one variable plots

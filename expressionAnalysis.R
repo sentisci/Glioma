@@ -33,7 +33,7 @@ rnaseqProject <- ProjectSetUp$new(
   filterGeneMethod        = "bySum",
   factorName              = "MutationStatus.Wu",
   metadataFileRefCol      = "Sample.Biowulf.ID.GeneExp",
-  metaDataFileName        = "MetadataMapper.v2.txt",
+  metaDataFileName        = "MetadataMapper.v3.txt",
   outputdirRDSDir         = "GeneRDSOutput",
   outputdirTXTDir         = "GeneTXTOutput",
   gseaDir                 = "GSEA",
@@ -71,11 +71,11 @@ StatsFinal
 
 ## Make the plot
 pdf(file=paste(
-    paste(rnaseqProject$workDir,rnaseqProject$projectName, rnaseqProject$plotsDir,"Mutation.Wu_Tree_Map_All", sep = "/"),
+    paste(rnaseqProject$workDir,rnaseqProject$projectName, rnaseqProject$plotsDir,"Histology.Wu_Tree_Map_All", sep = "/"),
     "pdf",sep="."), height=8, width= 10)
 
-#ggplot(StatsFinal, aes(area = Sample, fill = Color, label=MutationStatus.Wu, subgroup=DIAGNOSIS.SubMut.Wu)) +
-ggplot(StatsFinal, aes(area = Sample, fill = MutationStatus.Wu.color, label=DIAGNOSIS.SubMut.Wu, subgroup=MutationStatus.Wu)) +
+ggplot(StatsFinal, aes(area = Sample, fill = Color, label=MutationStatus.Wu, subgroup=DIAGNOSIS.SubMut.Wu)) +
+#ggplot(StatsFinal, aes(area = Sample, fill = MutationStatus.Wu.color, label=DIAGNOSIS.SubMut.Wu, subgroup=MutationStatus.Wu)) +
   geom_treemap(show.legend = TRUE) +
   geom_treemap_subgroup_border(colour="#4d4d4d") +
   geom_treemap_text(fontface = "bold.italic",
@@ -106,11 +106,13 @@ rm(mergeObjectsNoDup)
 #                                                    primaryID         = "gene_id",
 #                                                    metadata          = rnaseqProject$metaDataDF,
 #                                                    metadataFileRefCol= rnaseqProject$metadataFileRefCol )
-# 
-# saveRDS(mergeObjectsNoDup, paste(rnaseqProject$workDir,rnaseqProject$projectName,rnaseqProject$outputdirRDSDir,"RawCount",paste0("mergeObjectsNoDup.rawcounts.",rnaseqProject$date,".rds"),sep="/") )
+
+# saveRDS(mergeObjectsNoDup, paste(rnaseqProject$workDir,rnaseqProject$projectName,rnaseqProject$outputdirRDSDir,"RawCount",
+#                                  paste0("mergeObjectsNoDup.rawcounts.",rnaseqProject$date,".rds"),sep="/") )
 
 ### Read DataSets ####
-mergeObjectsNoDup_data <- readRDS(paste(rnaseqProject$workDir,rnaseqProject$projectName,rnaseqProject$outputdirRDSDir,"RawCount","mergeObjectsNoDup.rawcounts.2020-02-10.rds",sep="/"))
+mergeObjectsNoDup_data <- readRDS(paste(rnaseqProject$workDir,rnaseqProject$projectName,rnaseqProject$outputdirRDSDir,
+                                        "RawCount","mergeObjectsNoDup.rawcounts.2020-02-21.rds",sep="/"))
 
 ### Filter specific Histology samples ####
 to_filter_by_histology = FALSE
@@ -314,10 +316,13 @@ expressionTMM.RPKM.GSEA.print = corUtilsFuncs$createBroadGCTFile(expressionTMM.R
 #                                       paste0("RPKM_Data_Filt_Consolidated.GeneNames.all.pc.log2.",rnaseqProject$date,".rds"),sep="/"))
 
 ## Read the ssGSEA output
-ssGSEAScores            <- corUtilsFuncs$parseBroadGTCOutFile("../Glioma.data/GSEA/output/RPKM_Data_Filt_Consolidated.GeneNames.log2.ssGSEA2020-02-10.PROJ.gct")
+ssGSEAScores            <- corUtilsFuncs$parseBroadGTCOutFile("../Glioma.data/GSEA/output/RPKM_Data_Filt_Consolidated.GeneNames.log2.ssGSEA2020-02-21.PROJ.gct")
 
 ## Add custom expression like cytolytic scre and HLA gene expression to the ssGSEA Outpuut file.
 cytolyticScore          <- corUtilsFuncs$cytolyticScore(expressionTMM.RPKM.GSEA.Input)
+# CD4_th1_score          <- corUtilsFuncs$CD4_Th1(expressionTMM.RPKM.GSEA.Input)
+# CD4_th2_score          <- corUtilsFuncs$CD4_Th2(expressionTMM.RPKM.GSEA.Input)
+# HLA_cytolyticScore      <- rbind(expressionTMM.RPKM.GSEA.Input[c("HLA-A", "HLA-B", "HLA-C"),], cytolyticScore, CD4_th1_score, CD4_th2_score)
 HLA_cytolyticScore      <- rbind(expressionTMM.RPKM.GSEA.Input[c("HLA-A", "HLA-B", "HLA-C"),], cytolyticScore)
 View(data.frame(colnames(HLA_cytolyticScore), colnames(ssGSEAScores)))
 HLA_cytolyticScore.ordered      <- HLA_cytolyticScore %>% tibble::rownames_to_column() %>% 
@@ -370,7 +375,7 @@ plotLists[[1]]
 EnrischmentScorePlots <- lapply(plotLists, function(l) l[[1]])
 SBName                <- paste(rnaseqProject$workDir, rnaseqProject$projectName, rnaseqProject$plotsDir,
                                paste0("TMM-RPKM.ssGSEA.enrichmentScores.byVariantProfile.bean.log.", rnaseqProject$date, ".pdf"),sep="/")
-ggsave(SBName, marrangeGrob(EnrischmentScorePlots,ncol=2,nrow=1 ), width = 10, height = 10)
+ggsave(SBName, marrangeGrob(EnrischmentScorePlots,ncol=2,nrow=1 ), width = 10, height = 7)
 
 
 
