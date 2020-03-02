@@ -137,6 +137,7 @@ if(to_filter_by_histology==TRUE){
 # design %<>% arrange( MutationStatus.Wu,DIAGNOSIS )
 
 ## TYPE II
+design$MutationStatus.Wu <- factor(design$MutationStatus.Wu, levels = c("IDH_WT", "IDH1_Mutant", "IDH2_Mutant"), ordered = TRUE)
 design$Grade <- factor(design$Grade, levels = c("I", "II", "III", "IV"), ordered = TRUE)
 design %<>% arrange( Grade )
 
