@@ -3,7 +3,7 @@ workDir = "T:/Sivasish_Sindiri/R Scribble/Glioma.data/"
 setwd(paste0(workDir,"./AnnotatedFusionCalls"))
 
 ## REad well annotated DataFrame
-metaData <- read.csv(paste0(workDir,"/MetadataMapper.v2.txt"), header = T, sep = "\t", stringsAsFactors = FALSE); 
+metaData <- read.csv(paste0(workDir,"/MetadataMapper.v3.fusions.txt"), header = T, sep = "\t", stringsAsFactors = FALSE); 
 # metaData <- metaData %<>% dplyr::rename(SampleName = Biowulf_SampleName)
 head(metaData)
 
@@ -40,25 +40,25 @@ fusionFiles <- list.files("./"); length(fusionFiles)
 ### concatenate files and change "sample_id" to "Sample.ID"
 finalResultMatrix <- rbindlist(lapply(fusionFiles, makResultMatrix), fill = TRUE)
 dim(finalResultMatrix); View(head(finalResultMatrix))
-finalResultMatrix <- finalResultMatrix %>% dplyr::rename(Sample.ID=sample_id)
+finalResultMatrix <- finalResultMatrix %>% dplyr::rename(Sample.Data.ID=sample_id)
 
 ### Append metadata to the finalResultMatrix ###
 finalResultMatrixJoin <- dplyr::left_join(finalResultMatrix, metaData[,
-                                                 c("Patient.ID", "Sample.ID", "Sample.ID.Alias", "DIAGNOSIS.Alias", "LIBRARY_TYPE", "Case.ID")], 
-                                                 by="Sample.ID")
+                                                 c("Patient.ID", "Sample.Data.ID", "Sample.ID.Alias", "DIAGNOSIS.SubMut.Wu", "LIBRARY_TYPE", "Case.ID")], 
+                                                 by="Sample.Data.ID")
 head(finalResultMatrixJoin)
 
 ## Sanity Check1 : To evaluate the join // Check if join produced any NA
 df <- finalResultMatrixJoin %>% data.frame()
-df$Any_NA <- apply(df[,grep(paste( c("Patient.ID", "Sample.ID", "Sample.ID.Alias", "DIAGNOSIS.Alias", "LIBRARY_TYPE"),collapse = "|"), names(df) )],1, function(x) anyNA(x))
-df_NA_TRUE <- df[which(df$Any_NA == "TRUE"),] %>% dplyr::distinct(Patient.ID, Sample.ID, DIAGNOSIS.Alias);dim(df_NA_TRUE); View(df_NA_TRUE)
+df$Any_NA <- apply(df[,grep(paste( c("Patient.ID","Sample.Data.ID","Sample.ID.Alias", "DIAGNOSIS.SubMut.Wu", "LIBRARY_TYPE"),collapse = "|"), names(df) )],1, function(x) anyNA(x))
+df_NA_TRUE <- df[which(df$Any_NA == "TRUE"),] %>% dplyr::distinct(Patient.ID, Sample.ID.Alias, DIAGNOSIS.SubMut.Wu);dim(df_NA_TRUE); View(df_NA_TRUE)
 
 ## Get only completecases 
-finalResultMatrixJoin <- finalResultMatrixJoin %>% filter(!Sample.ID %in% c(df_NA_TRUE$Sample.ID))
-dim(finalResultMatrixJoin) ; length(unique(finalResultMatrixJoin$Sample.ID))
+finalResultMatrixJoin <- finalResultMatrixJoin %>% filter(!Sample.ID.Alias %in% c(df_NA_TRUE$Sample.ID.Alias))
+dim(finalResultMatrixJoin) ; length(unique(finalResultMatrixJoin$Sample.ID.Alias))
 
 ## Sanity Check
-finalResultMatrixJoin %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+finalResultMatrixJoin %>% filter(grepl("ABL1", right_gene)) %>% dim()
 
 ## Make a key 
 finalResultMatrixJoin$key <- paste(finalResultMatrixJoin$left_chr, finalResultMatrixJoin$left_gene, finalResultMatrixJoin$right_chr, 
@@ -69,7 +69,7 @@ finalResultMatrixJoin.NoDup <- finalResultMatrixJoin[!duplicated(finalResultMatr
 finalResultMatrixJoin.Dup <- finalResultMatrixJoin[duplicated(finalResultMatrixJoin$key2), ]
 
 ## Sanity Check
-finalResultMatrixJoin.NoDup %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+finalResultMatrixJoin.NoDup %>% filter(grepl("ABL1", right_gene)) %>% dim()
 
 ## Count samples with Defuse
 finalfusionResultMatrix.Defuse <- finalResultMatrixJoin.NoDup %>% filter( grepl('*Defuse*', tool)) %>%
@@ -86,20 +86,19 @@ rightGenePair   <- geneFusionRight[which(!geneFusionRight %in% Annotation$GeneNa
 geneFusionLeft  <- as.character(unique(finalResultMatrixJoin.NoDup$left_gene) )
 leftGenePair    <- geneFusionLeft[which(!geneFusionLeft %in% Annotation$GeneName)]
 
-## Remove disgusting samples . "NCIEWS5000muscle_T_D23N9ACXX" , "NCI0228normal_T_C3JV2ACXX" . I dont understand why tumor patient normal is used in
 ## RNASeq cohort experiment
 finalResultMatrixJoin.NoDup.NoPatientNormal <-  finalResultMatrixJoin.NoDup %>% filter()
 dim(finalResultMatrixJoin.NoDup.NoPatientNormal)
 ## Sanity Check
-finalResultMatrixJoin.NoDup.NoPatientNormal %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+finalResultMatrixJoin.NoDup.NoPatientNormal %>% filter(grepl("ABL1", right_gene)) %>% dim()
 
 ##Filter Fusion File
-fusionFile.NS  <- finalResultMatrixJoin.NoDup.NoPatientNormal %>% filter( DIAGNOSIS.Alias %in% c("NS") ) ; dim(fusionFile.NS )
+fusionFile.NS  <- finalResultMatrixJoin.NoDup.NoPatientNormal %>% filter( DIAGNOSIS.SubMut.Wu %in% c("NS") ) ; dim(fusionFile.NS )
 finalResultMatrixJoin.NoDup.NoNS <- finalResultMatrixJoin.NoDup.NoPatientNormal %>% filter(! key %in% fusionFile.NS$key ); dim(finalResultMatrixJoin.NoDup.NoNS)
 ## Remove bogus genes
 fusionFile  <- finalResultMatrixJoin.NoDup.NoNS %>% filter( !(left_gene %in% leftGenePair) ) %>%  filter( !(right_gene %in% rightGenePair) ) ; dim(fusionFile)
 ## Sanity Check
-fusionFile %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+fusionFile %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFile)
 
 
@@ -109,7 +108,7 @@ dim(fusionFile)
 fusionFile <- data.table(fusionFile)
 fusionFile <- fusionFile[ grepl("Tier 1.1|Tier 1.2|Tier 1.3|Tier 2.1", var_level) ]; 
 ## Sanity Check
-fusionFile %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+fusionFile %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFile)
 
 ### Step 2 decondensing
@@ -118,12 +117,12 @@ fusionFileSplits.v1 <- fusionFile %>% tidyr::separate( spanreadcount, newCols , 
 fusionFileSplits.v1[is.na(fusionFileSplits.v1)] <- 0 
 fusionFileSplits.v1[,(newCols):= lapply(.SD, as.numeric), .SDcols = newCols]
 ## Sanity Check
-fusionFileSplits.v1 %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+fusionFileSplits.v1 %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFileSplits.v1); View(fusionFileSplits.v1)
 
 ### Step 3 Remove fusions called by Star-fusions or FusionCatcher
 fusionFileFilt.v2 <- fusionFileSplits.v1[ !grepl("^FusionCatcher$|^STAR-fusion$", tool) ] ;
-fusionFileFilt.v2 %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+fusionFileFilt.v2 %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFileFilt.v2); View(fusionFileFilt.v2)
 
 ### Step 4 Keep if any two or rmore callers regardless of spanning reads
@@ -132,7 +131,7 @@ fusionFileFilt.v3 <- fusionFileFilt.v2[ grepl("^tophatFusion$", tool) &  SPTool1
                                              SPTool1 > 0  & SPTool3 > 0 |
                                              SPTool2 > 0  & SPTool3 > 0 
                                         ];
-fusionFileFilt.v3 %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+fusionFileFilt.v3 %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFileFilt.v3); View(fusionFileFilt.v3)
 
 ### Step 5 Keep Tier 2.1 fusions with spanning reads >= 10
@@ -147,7 +146,7 @@ dim(fusionFileFilt.v3.ToRemove); View(fusionFileFilt.v3.ToRemove)
 
 ### Step 6 Final filter to generate the file
 fusionFileFilt.v4 <- fusionFileFilt.v3[ !(fusionFileFilt.v3$key %in% fusionFileFilt.v3.ToRemove$key) ]
-fusionFileFilt.v4 %>% filter(grepl("CREM|INO80D", right_gene)) %>% dim()
+fusionFileFilt.v4 %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFileFilt.v4); View(fusionFileFilt.v4)
 
 write.table(finalResultMatrixJoin.NoDup, "../FinalFusionResultMatrix.v3.txt", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE )

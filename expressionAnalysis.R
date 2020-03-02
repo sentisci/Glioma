@@ -70,9 +70,9 @@ StatsFinal[,"LegendSampleSum"] <- paste(StatsFinal[,"MutationStatus.Wu"],"( ",St
 StatsFinal
 
 ## Make the plot
-pdf(file=paste(
-    paste(rnaseqProject$workDir,rnaseqProject$projectName, rnaseqProject$plotsDir,"Histology.Wu_Tree_Map_All", sep = "/"),
-    "pdf",sep="."), height=8, width= 10)
+# pdf(file=paste(
+#     paste(rnaseqProject$workDir,rnaseqProject$projectName, rnaseqProject$plotsDir,"Histology.Wu_Tree_Map_All", sep = "/"),
+#     "pdf",sep="."), height=8, width= 10)
 
 ggplot(StatsFinal, aes(area = Sample, fill = Color, label=MutationStatus.Wu, subgroup=DIAGNOSIS.SubMut.Wu)) +
 #ggplot(StatsFinal, aes(area = Sample, fill = MutationStatus.Wu.color, label=DIAGNOSIS.SubMut.Wu, subgroup=MutationStatus.Wu)) +
@@ -93,7 +93,7 @@ ggplot(StatsFinal, aes(area = Sample, fill = Color, label=MutationStatus.Wu, sub
                              padding.x = grid::unit(3, "mm"),
                              padding.y = grid::unit(1.5, "mm")) +
   scale_fill_identity()
-dev.off()
+# dev.off()
 
 ## Generate expression matrix ####
 rm(mergeObjectsNoDup)
@@ -128,12 +128,18 @@ if(to_filter_by_histology==TRUE){
 #                                                        "Reccurent glioneuronal tumor"), ordered = TRUE)
 
 # ## Rearrange the design matrix and data matrix based on Re-Assigned alias Diagnosis
-design$MutationStatus.Wu <- factor(design$MutationStatus.Wu, levels = c("IDH_WT", "IDH1_Mutant", "IDH2_Mutant"), ordered = TRUE)
-design$DIAGNOSIS <- factor(design$DIAGNOSIS.SubMut.Wu, levels =c("Anaplastic.PXA_III" , "Ependymoma_II" , "Ependymoma_Myxo" ,
-                              "GBM_IV" , "GBM_IV_HMP" , "GN_II" , "GS_IV" , "PA" , "A_II" , "AA_III" , 
-                              "AO_III" , "AO_III_HMP" , "O_II"), ordered = TRUE)
 
-design %<>% arrange( MutationStatus.Wu,DIAGNOSIS )
+## Type I
+# design$MutationStatus.Wu <- factor(design$MutationStatus.Wu, levels = c("IDH_WT", "IDH1_Mutant", "IDH2_Mutant"), ordered = TRUE)
+# design$DIAGNOSIS <- factor(design$DIAGNOSIS.SubMut.Wu, levels =c("Anaplastic.PXA_III" , "Ependymoma_II" , "Ependymoma_Myxo" ,
+#                               "GBM_IV" , "GBM_IV_HMP" , "GN_II" , "GS_IV" , "PA" , "A_II" , "AA_III" , 
+#                               "AO_III" , "AO_III_HMP" , "O_II"), ordered = TRUE)
+# design %<>% arrange( MutationStatus.Wu,DIAGNOSIS )
+
+## TYPE II
+design$Grade <- factor(design$Grade, levels = c("I", "II", "III", "IV"), ordered = TRUE)
+design %<>% arrange( Grade )
+
 print("design")
 print(dim(design))
 mergeObjectsNoDup <- mergeObjectsNoDup_data %>% dplyr::select(one_of(as.character(design[,rnaseqProject$metadataFileRefCol]))); 
@@ -310,7 +316,7 @@ expressionTMM.RPKM.GSEA.print = corUtilsFuncs$createBroadGCTFile(expressionTMM.R
 
 # # ## Save input for ssGSEA 
 # write.table(expressionTMM.RPKM.GSEA.print, paste(rnaseqProject$workDir,rnaseqProject$projectName,"GSEA/rnk",
-#                                                  paste0("RPKM_Data_Filt_Consolidated.GeneNames.log2.ssGSEA",rnaseqProject$date,".txt"),sep="/"),
+#                                                  paste0("RPKM_Data_Filt_Consolidated.GeneNames.log2.groupGSEA",rnaseqProject$date,".txt"),sep="/"),
 #             sep="\t", row.names = FALSE, quote = FALSE)
 # saveRDS(expressionTMM.RPKM.GSEA.print, paste(rnaseqProject$workDir,rnaseqProject$projectName,rnaseqProject$gseaDir,
 #                                       paste0("RPKM_Data_Filt_Consolidated.GeneNames.all.pc.log2.",rnaseqProject$date,".rds"),sep="/"))
@@ -320,10 +326,10 @@ ssGSEAScores            <- corUtilsFuncs$parseBroadGTCOutFile("../Glioma.data/GS
 
 ## Add custom expression like cytolytic scre and HLA gene expression to the ssGSEA Outpuut file.
 cytolyticScore          <- corUtilsFuncs$cytolyticScore(expressionTMM.RPKM.GSEA.Input)
-# CD4_th1_score          <- corUtilsFuncs$CD4_Th1(expressionTMM.RPKM.GSEA.Input)
-# CD4_th2_score          <- corUtilsFuncs$CD4_Th2(expressionTMM.RPKM.GSEA.Input)
-# HLA_cytolyticScore      <- rbind(expressionTMM.RPKM.GSEA.Input[c("HLA-A", "HLA-B", "HLA-C"),], cytolyticScore, CD4_th1_score, CD4_th2_score)
-HLA_cytolyticScore      <- rbind(expressionTMM.RPKM.GSEA.Input[c("HLA-A", "HLA-B", "HLA-C"),], cytolyticScore)
+CD4_th1_score          <- corUtilsFuncs$CD4_Th1(expressionTMM.RPKM.GSEA.Input)
+CD4_th2_score          <- corUtilsFuncs$CD4_Th2(expressionTMM.RPKM.GSEA.Input)
+HLA_cytolyticScore      <- rbind(expressionTMM.RPKM.GSEA.Input[c("HLA-A", "HLA-B", "HLA-C"),], cytolyticScore, CD4_th1_score, CD4_th2_score)
+#HLA_cytolyticScore      <- rbind(expressionTMM.RPKM.GSEA.Input[c("HLA-A", "HLA-B", "HLA-C"),], cytolyticScore)
 View(data.frame(colnames(HLA_cytolyticScore), colnames(ssGSEAScores)))
 HLA_cytolyticScore.ordered      <- HLA_cytolyticScore %>% tibble::rownames_to_column() %>% 
                                                     dplyr::select(one_of(c("rowname",colnames(ssGSEAScores))))
@@ -350,7 +356,7 @@ dim(ssGSEAScores.HLA.Cyto.Selected)
 stopifnot( ncol(ssGSEAScores.HLA.Cyto.Selected) == length(as.character(selected.metadata$Database.name)) )
 
 ## Preparing the expression matrix for string plot, by appending metadata
-Scores <- cbind(t(ssGSEAScores.HLA.Cyto.Selected), selected.metadata[,c("MutationStatus.Wu","HMP_profile"), drop=FALSE]) %>% 
+Scores.Geo.mean <- cbind(t(ssGSEAScores.HLA.Cyto.Selected), selected.metadata[,c("MutationStatus.Wu","HMP_profile"), drop=FALSE]) %>% 
   dplyr::rename_(.dots = setNames( list("MutationStatus.Wu"), list("Diagnosis") )) #%>%
 #dplyr::mutate(Diagnosis = factor(Diagnosis, ordered = TRUE, levels = orderOfFactor))
 
@@ -378,5 +384,35 @@ SBName                <- paste(rnaseqProject$workDir, rnaseqProject$projectName,
 ggsave(SBName, marrangeGrob(EnrischmentScorePlots,ncol=2,nrow=1 ), width = 10, height = 7)
 
 
+### Perform basic T Test
+Scores.Geo.mean$IDH.HMP <- paste(Scores.Geo.mean$Diagnosis, Scores.Geo.mean$HMP_profile, sep="_")
+Scores.Geo.mean$IDH.HMP <- gsub("IDH1|IDH2", "IDH", Scores.Geo.mean$IDH.HMP); unique(Scores.Geo.mean$IDH.HMP)
+Scores.Geo.mean.tidy  <- Scores.Geo.mean %>% gather(key = condition, value = expression, 1:32); head(Scores.Geo.mean.tidy)
 
+comparisons <- list( c("IDH_WT_Non-HMP","IDH_Mutant_Non-HMP"), 
+                        c("IDH_WT_Non-HMP","IDH_Mutant_HMP"),
+                        c("IDH_WT_Non-HMP","IDH_WT_HMP" ),
+                        c("IDH_Mutant_Non-HMP","IDH_Mutant_HMP"),
+                        c("IDH_Mutant_Non-HMP","IDH_WT_HMP" ),
+                        c("IDH_Mutant_HMP","IDH_WT_HMP"))
 
+# name = "CytolyticScore"
+# Scores.Geo.mean.tidy.CTL <- Scores.Geo.mean.tidy %>% filter_(.dots = paste0("condition ",  "== '" , name , "' "))
+pdfName                <- paste(rnaseqProject$workDir, rnaseqProject$projectName, rnaseqProject$plotsDir,
+                               paste0("Wilcoxin_rank_sum_test.IDH.HMP.ImmuneSignatures.v2.", rnaseqProject$date, ".pdf"),sep="/")
+pdf(pdfName, height = 40, width = 20)
+allPlots <- ggplot(Scores.Geo.mean.tidy, aes(x=IDH.HMP, y=expression, fill=IDH.HMP)) +
+              geom_boxplot() +
+              theme_bw() +
+              scale_fill_brewer(palette="Dark2") +
+              stat_compare_means(comparisons = comparisons,paired = FALSE,  method = "wilcox.test",
+                                 ref.group = ".all.") +
+              xlab("IDH mutation / HMP ") + ylab(name) +
+              theme(axis.title.x = element_text(size=14, face="bold"),
+                    axis.title.y = element_text(size=14, face="bold"),
+                    axis.text = element_text(size=10, face="bold"),
+                    axis.text.x = element_text(angle = 90)) + 
+                facet_wrap(~condition, ncol = 4, scales = "free_y")
+allPlots
+dev.off()
+            
