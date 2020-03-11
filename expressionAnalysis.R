@@ -139,7 +139,7 @@ if(to_filter_by_histology==TRUE){
 ## TYPE II
 design$MutationStatus.Wu <- factor(design$MutationStatus.Wu, levels = c("IDH_WT", "IDH1_Mutant", "IDH2_Mutant"), ordered = TRUE)
 design$Grade <- factor(design$Grade, levels = c("I", "II", "III", "IV"), ordered = TRUE)
-design %<>% arrange( Grade )
+design %<>% arrange( MutationStatus.Wu, Grade )
 
 print("design")
 print(dim(design))
@@ -316,9 +316,9 @@ rownames(expressionTMM.RPKM.GSEA.Input) <-expressionTMM.RPKM.arr[, 6];
 expressionTMM.RPKM.GSEA.print = corUtilsFuncs$createBroadGCTFile(expressionTMM.RPKM.GSEA.Input)
 
 # # ## Save input for ssGSEA 
-# write.table(expressionTMM.RPKM.GSEA.print, paste(rnaseqProject$workDir,rnaseqProject$projectName,"GSEA/rnk",
-#                                                  paste0("RPKM_Data_Filt_Consolidated.GeneNames.log2.groupGSEA",rnaseqProject$date,".txt"),sep="/"),
-#             sep="\t", row.names = FALSE, quote = FALSE)
+write.table(expressionTMM.RPKM.GSEA.print, paste(rnaseqProject$workDir,rnaseqProject$projectName,"GSEA/rnk",
+                                                 paste0("RPKM_Data_Filt_Consolidated.GeneNames.log2.groupGSEA.Mu.WT",rnaseqProject$date,".txt"),sep="/"),
+            sep="\t", row.names = FALSE, quote = FALSE)
 # saveRDS(expressionTMM.RPKM.GSEA.print, paste(rnaseqProject$workDir,rnaseqProject$projectName,rnaseqProject$gseaDir,
 #                                       paste0("RPKM_Data_Filt_Consolidated.GeneNames.all.pc.log2.",rnaseqProject$date,".rds"),sep="/"))
 

@@ -106,7 +106,7 @@ dim(fusionFile)
 
 ### Step 1 Keep the selected tier
 fusionFile <- data.table(fusionFile)
-fusionFile <- fusionFile[ grepl("Tier 1.1|Tier 1.2|Tier 1.3|Tier 2.1", var_level) ]; 
+#fusionFile <- fusionFile[ grepl("Tier 1.1|Tier 1.2|Tier 1.3|Tier 2.1", var_level) ]; 
 ## Sanity Check
 fusionFile %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFile)
@@ -149,8 +149,8 @@ fusionFileFilt.v4 <- fusionFileFilt.v3[ !(fusionFileFilt.v3$key %in% fusionFileF
 fusionFileFilt.v4 %>% filter(grepl("ABL1", right_gene)) %>% dim()
 dim(fusionFileFilt.v4); View(fusionFileFilt.v4)
 
-write.table(finalResultMatrixJoin.NoDup, "../FinalFusionResultMatrix.v3.txt", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE )
-write.table(fusionFileFilt.v4 , "../FinalFilteredfusionResultMatrix.v3.txt", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
+write.table(finalResultMatrixJoin.NoDup, "../FinalFusionResultMatrix.v4.txt", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE )
+write.table(fusionFileFilt.v4 , "../FinalFilteredfusionResultMatrix.v4.txt", sep="\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
 
 
 ### Extra decondensing and filtering for Fusion Neoantigens ####
